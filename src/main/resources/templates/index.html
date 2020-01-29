@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:include="fragment-header">
+    <title id="pageTitle">Index</title>
+</head>
+<body>
+<div class="row">
+    <div class="col-12">
+        <a th:href="@{/newGame}" class="btn btn-primary">Nouvelle partie</a>
+    </div>
+</div>
+<div th:include="fragment-script"></div>
+</body>
+</html>
