@@ -68,6 +68,7 @@ public class PokerController {
         pot = 0;
         //TODO instancier les joueurs
         List<GamePlayer> gamePlayers = new ArrayList<>();
+        int j = 1;
         for (Long i = 1L; i <= nbPlayer; i++) {
             Optional<Player> optionalPlayer = playerRepository.findById(i);
             if (optionalPlayer.isPresent()) {
@@ -81,6 +82,7 @@ public class PokerController {
                 gamePlayer.setGame(saveNewGame);
                 gamePlayer.setPlayer(player);
                 gamePlayer.setGain(player.getWallet());
+                gamePlayer.setPlayerPosition(j);
                 if (i == nbPlayer) {
                     gamePlayer.setTurn("BB");
                     gamePlayer.setGain(gamePlayer.getGain()-saveNewGame.getBigBlind());
@@ -93,6 +95,7 @@ public class PokerController {
                     gamePlayer.setTurn("");
                 }
                 gamePlayerRepository.save(gamePlayer);
+                j++;
             }
         }
         List<Card> gameCards = new ArrayList<>();
@@ -202,11 +205,28 @@ public class PokerController {
         winner.setGain(winner.getGain()+pot);
         Game game = gameRepository.findById(idGameLong).get();
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
-        for(GamePlayer gamePlayer : gamePlayers){
+        for(GamePlayer gamePlayer : gamePlayers) {
             gamePlayer.setStep(0);
             gamePlayer.setPlayerDecision(0);
             Player player = gamePlayer.getPlayer();
             player.setWallet(gamePlayer.getGain());
+            if (gamePlayer.getPlayerPosition() < gamePlayers.size()) {
+                gamePlayer.setPlayerPosition(gamePlayer.getPlayerPosition() + 1);
+            } else {
+                gamePlayer.setPlayerPosition(1);
+            }
+            gamePlayerRepository.save(gamePlayer);
+        }
+        gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
+        for(GamePlayer gamePlayer : gamePlayers) {
+            if(gamePlayer.getPlayerPosition() == gamePlayers.size()){
+                gamePlayer.setTurn("BB");
+            } else if (gamePlayer.getPlayerPosition() == gamePlayers.size()-1){
+                gamePlayer.setTurn("SB");
+            } else {
+                gamePlayer.setTurn("");
+            }
+            gamePlayerRepository.save(gamePlayer);
         }
         return "";
     }

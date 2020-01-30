@@ -23,7 +23,7 @@
         </div>
         <div class="row">
             <div class="col-12">
-                <form method="post" th:action="@{/game/{path}(path=${game.getId()})}">
+                <form method="post" th:action="@{/conclusion/{path}(path=${game.getId()})}">
                     <span th:each="gamePlayer : ${gamePlayers}">
                         <span th:if="${gamePlayer.getPlayerDecision()==2}">
                             <button class="btn btn-primary" type="submit" name="idGamePlayerWinner" th:value="${gamePlayer.getId()}">Vainqueur</button>

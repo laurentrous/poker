@@ -21,6 +21,7 @@ public class GamePlayer {
     private String turn;
     private int playerDecision;
     private int step;
+    private int playerPosition;
 
     public GamePlayer() {
     }
@@ -79,5 +80,13 @@ public class GamePlayer {
 
     public void setStep(int step) {
         this.step = step;
+    }
+
+    public int getPlayerPosition() {
+        return playerPosition;
+    }
+
+    public void setPlayerPosition(int playerPosition) {
+        this.playerPosition = playerPosition;
     }
 }
