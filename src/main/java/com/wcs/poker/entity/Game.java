@@ -18,7 +18,7 @@ public class Game {
     @JoinTable(name = "game_card",
             joinColumns = @JoinColumn(name = "game_id"),
             inverseJoinColumns = @JoinColumn(name = "card_id"))
-    private List<Card> effects = new ArrayList<>();
+    private List<Card> cards = new ArrayList<>();
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
     private List<GamePlayer> gamePlayers = new ArrayList<>();
@@ -50,12 +50,12 @@ public class Game {
         this.bigBlind = bigBlind;
     }
 
-    public List<Card> getEffects() {
-        return effects;
+    public List<Card> getCards() {
+        return cards;
     }
 
-    public void setEffects(List<Card> effects) {
-        this.effects = effects;
+    public void setCards(List<Card> cards) {
+        this.cards = cards;
     }
 
     public List<GamePlayer> getGamePlayers() {

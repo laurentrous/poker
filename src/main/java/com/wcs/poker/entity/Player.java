@@ -17,12 +17,13 @@ public class Player {
     private String password;
     private boolean ia;
     private boolean admin;
+    private int wallet;
 
     @ManyToMany
     @JoinTable(name = "player_card",
             joinColumns = @JoinColumn(name = "player_id"),
             inverseJoinColumns = @JoinColumn(name = "card_id"))
-    private List<Card> effects = new ArrayList<>();
+    private List<Card> cards = new ArrayList<>();
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
     private List<GamePlayer> gamePlayers = new ArrayList<>();
@@ -86,12 +87,20 @@ public class Player {
         this.admin = admin;
     }
 
-    public List<Card> getEffects() {
-        return effects;
+    public int getWallet() {
+        return wallet;
     }
 
-    public void setEffects(List<Card> effects) {
-        this.effects = effects;
+    public void setWallet(int wallet) {
+        this.wallet = wallet;
+    }
+
+    public List<Card> getCards() {
+        return cards;
+    }
+
+    public void setCards(List<Card> cards) {
+        this.cards = cards;
     }
 
     public List<GamePlayer> getGamePlayers() {

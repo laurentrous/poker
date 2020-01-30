@@ -9,6 +9,11 @@
         <a th:href="@{/newGame}" class="btn btn-primary">Nouvelle partie</a>
     </div>
 </div>
+<div class="row" th:if="${firstGamePlayer != null}">
+    <div class="col-12">
+        <a th:href="@{'/game/' + ${actualGame.getId()} + '/1/' + ${firstGamePlayer.getId()}}" class="btn btn-dark">Partie en cours</a>
+    </div>
+</div>
 <div th:include="fragment-script"></div>
 </body>
 </html>
