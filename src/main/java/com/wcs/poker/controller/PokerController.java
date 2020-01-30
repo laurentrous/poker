@@ -34,6 +34,7 @@ public class PokerController {
     @Autowired
     public PlayerRepository playerRepository;
 
+    public static int pot = 0;
 
     @GetMapping("/")
     public String index(Model model) {
@@ -52,7 +53,6 @@ public class PokerController {
 
     @GetMapping("/newGame")
     public String newGame(HttpSession sessionUser, Model model) {
-        //TODO récupérer la session du joueur connecté
         //TODO remettre le jeu de carte à zéro : pulled = false
         this.initialiseCardGame();
         Game game = new Game();
@@ -65,6 +65,7 @@ public class PokerController {
     public String createNewGame(HttpSession sessionUser, Model model, @RequestParam int nbPlayer, @ModelAttribute Game newGame) {
         //TODO créer un nouveau jeu
         Game saveNewGame = gameRepository.save(newGame);
+        pot = 0;
         //TODO instancier les joueurs
         List<GamePlayer> gamePlayers = new ArrayList<>();
         for (Long i = 1L; i <= nbPlayer; i++) {
@@ -72,25 +73,30 @@ public class PokerController {
             if (optionalPlayer.isPresent()) {
                 Player player = optionalPlayer.get();
                 List<Card> cards = new ArrayList<>();
-                cards.add(this.pullACard());
-                cards.add(this.pullACard());
+                while (cards.size() < 2) {
+                    cards.add(this.pullACard());
+                }
                 player.setCards(cards);
                 GamePlayer gamePlayer = new GamePlayer();
                 gamePlayer.setGame(saveNewGame);
                 gamePlayer.setPlayer(player);
+                gamePlayer.setGain(player.getWallet());
                 if (i == nbPlayer) {
                     gamePlayer.setTurn("BB");
+                    gamePlayer.setGain(gamePlayer.getGain()-saveNewGame.getBigBlind());
+                    pot += saveNewGame.getBigBlind();
                 } else if (i == nbPlayer - 1) {
                     gamePlayer.setTurn("SB");
+                    gamePlayer.setGain(gamePlayer.getGain()-saveNewGame.getSmallBlind());
+                    pot += saveNewGame.getSmallBlind();
                 } else {
                     gamePlayer.setTurn("");
                 }
-                gamePlayer.setGain(player.getWallet());
                 gamePlayerRepository.save(gamePlayer);
             }
         }
         List<Card> gameCards = new ArrayList<>();
-        for (int a = 0; a < 5; a++) {
+        while (gameCards.size() < 5) {
             gameCards.add(this.pullACard());
         }
         saveNewGame.setCards(gameCards);
@@ -128,7 +134,7 @@ public class PokerController {
         if (step >= 4) {
             model.addAttribute("carte5", gameCards.get(4));
         }
-
+        model.addAttribute("pot", pot);
         return "gameStep";
     }
 
@@ -144,13 +150,24 @@ public class PokerController {
         Long idActualPlayer = (long) idPlayer;
         GamePlayer actualGamePlayer = gamePlayerRepository.findByPlayerIdAndGameId(idActualPlayer, idGameLong);
         actualGamePlayer.setPlayerDecision(decision);
+        if(decision == 2){
+            if(step==1 &&actualGamePlayer.getTurn().equals("SB")){
+                actualGamePlayer.setGain(actualGamePlayer.getGain() - (game.getBigBlind()-game.getSmallBlind()));
+                pot += game.getBigBlind()-game.getSmallBlind();
+            }
+            else if(step==1 &&actualGamePlayer.getTurn().equals("BB")){
+               pot += 0;
+            } else {
+                actualGamePlayer.setGain(actualGamePlayer.getGain() - game.getBigBlind());
+                pot += game.getBigBlind();
+            }
+        }
         actualGamePlayer.setStep(step);
         gamePlayerRepository.save(actualGamePlayer);
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(idGameLong).get();
         int position = gamePlayers.indexOf(actualGamePlayer);
         GamePlayer nextGamePlayer = this.whoIsPlayingThisStep(game, position);
-        if(actualGamePlayer.getTurn().equals("BB"))
-        {
+        if (actualGamePlayer.getTurn().equals("BB")) {
             step++;
             nextGamePlayer = gamePlayers.get(0);
         }
