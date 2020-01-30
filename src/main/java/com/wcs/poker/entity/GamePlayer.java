@@ -19,7 +19,7 @@ public class GamePlayer {
 
     private int gain;
     private String turn;
-    private int playerDecisison;
+    private int playerDecision;
     private int step;
 
     public GamePlayer() {
@@ -65,12 +65,12 @@ public class GamePlayer {
         this.turn = turn;
     }
 
-    public int getPlayerDecisison() {
-        return playerDecisison;
+    public int getPlayerDecision() {
+        return playerDecision;
     }
 
-    public void setPlayerDecisison(int playerDecisison) {
-        this.playerDecisison = playerDecisison;
+    public void setPlayerDecision(int playerDecisison) {
+        this.playerDecision = playerDecisison;
     }
 
     public int getStep() {

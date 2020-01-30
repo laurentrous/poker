@@ -143,20 +143,16 @@ public class PokerController {
         model.addAttribute("game", game);
         Long idActualPlayer = (long) idPlayer;
         GamePlayer actualGamePlayer = gamePlayerRepository.findByPlayerIdAndGameId(idActualPlayer, idGameLong);
-        actualGamePlayer.setPlayerDecisison(decision);
+        actualGamePlayer.setPlayerDecision(decision);
         actualGamePlayer.setStep(step);
         gamePlayerRepository.save(actualGamePlayer);
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(idGameLong).get();
         int position = gamePlayers.indexOf(actualGamePlayer);
         GamePlayer nextGamePlayer = this.whoIsPlayingThisStep(game, position);
-        //TODO ICI VERIFER SI ON PEUT PASSER A LETAPE SUIVANTE
-        if (step > 50) {
+        if(actualGamePlayer.getTurn().equals("BB"))
+        {
             step++;
-            if (step > 5) {
-                //todo faire une redirection vers la fin de cette distribution
-            }
-            model.addAttribute("step", step);
-            return "redirect:/game/" + game.getId() + "/" + step + "/" + gamePlayers.get(0).getId();
+            nextGamePlayer = gamePlayers.get(0);
         }
         model.addAttribute("step", step);
         return "redirect:/game/" + game.getId() + "/" + step + "/" + nextGamePlayer.getId();
@@ -206,10 +202,11 @@ public class PokerController {
         if (position == gamePlayers.size()) {
             position = 0;
         }
+        /*
         int a = 0;
         GamePlayer gamePlayer = gamePlayers.get(position);
         while (a < gamePlayers.size() + 1) {
-            if (gamePlayer.getPlayerDecisison() > 1) {
+            if (gamePlayer.getPlayerDecision() > 1) {
                 return gamePlayer;
             }
             position++;
@@ -219,7 +216,7 @@ public class PokerController {
             gamePlayer = gamePlayers.get(position);
             a++;
         }
-
+        */
         return gamePlayers.get(position);
     }
 
@@ -228,7 +225,7 @@ public class PokerController {
         int a = 1;
         int decision = 2;
         for (GamePlayer gamePlayer : gamePlayers) {
-            int playerDecision = gamePlayer.getPlayerDecisison();
+            int playerDecision = gamePlayer.getPlayerDecision();
             if (playerDecision != decision) {
                 return false;
             }
