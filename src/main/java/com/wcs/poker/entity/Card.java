@@ -1,5 +1,6 @@
 package com.wcs.poker.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -11,6 +12,9 @@ public class Card {
     private String color;
     private String name;
     private int value;
+
+    @Column(columnDefinition = "boolean default false")
+    private boolean pulled;
 
 
     public Card() {
@@ -47,5 +51,13 @@ public class Card {
 
     public void setValue(int value) {
         this.value = value;
+    }
+
+    public boolean isPulled() {
+        return pulled;
+    }
+
+    public void setPulled(boolean pulled) {
+        this.pulled = pulled;
     }
 }

@@ -19,6 +19,8 @@ public class GamePlayer {
 
     private int gain;
     private String turn;
+    private int playerDecisison;
+    private int step;
 
     public GamePlayer() {
     }
@@ -61,5 +63,21 @@ public class GamePlayer {
 
     public void setTurn(String turn) {
         this.turn = turn;
+    }
+
+    public int getPlayerDecisison() {
+        return playerDecisison;
+    }
+
+    public void setPlayerDecisison(int playerDecisison) {
+        this.playerDecisison = playerDecisison;
+    }
+
+    public int getStep() {
+        return step;
+    }
+
+    public void setStep(int step) {
+        this.step = step;
     }
 }
