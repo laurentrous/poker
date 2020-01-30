@@ -170,10 +170,45 @@ public class PokerController {
         if (actualGamePlayer.getTurn().equals("BB")) {
             step++;
             nextGamePlayer = gamePlayers.get(0);
+            if(step==5){
+                return "redirect:/conclusion/" + game.getId();
+            }
         }
         model.addAttribute("step", step);
         return "redirect:/game/" + game.getId() + "/" + step + "/" + nextGamePlayer.getId();
 
+    }
+
+    @GetMapping("/conclusion/{idGame}")
+    public String conclusion(Model model,
+                             @PathVariable("idGame") int idGame){
+        Long idGameLong = (long) idGame;
+        Game game = gameRepository.findById(idGameLong).get();
+        model.addAttribute("game", game);
+        List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
+        model.addAttribute("gamePlayers", gamePlayers);
+        List<Card> gameCards = game.getCards();
+        model.addAttribute("gameCards", gameCards);
+        model.addAttribute("pot", pot);
+        return "conclusion";
+    }
+
+    @PostMapping("/conclusion/{idGame}")
+    public String conclusionSave(Model model,
+                                 @PathVariable("idGame") int idGame,
+                                 @RequestParam("idGamePlayerWinner") Long idGamePlayerWinner){
+        Long idGameLong = (long) idGame;
+        GamePlayer winner = gamePlayerRepository.findById(idGamePlayerWinner).get();
+        winner.setGain(winner.getGain()+pot);
+        Game game = gameRepository.findById(idGameLong).get();
+        List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
+        for(GamePlayer gamePlayer : gamePlayers){
+            gamePlayer.setStep(0);
+            gamePlayer.setPlayerDecision(0);
+            Player player = gamePlayer.getPlayer();
+            player.setWallet(gamePlayer.getGain());
+        }
+        return "";
     }
 
     public Card pullACard() {

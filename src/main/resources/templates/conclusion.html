@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:include="fragment-header">
+    <title id="pageTitle">GameStep</title>
+</head>
+<body>
+<div class="row">
+    <div class="col-9">
+        <div class="row justify-content-center">
+            <div class="col-12" th:each="gamePlayer : ${gamePlayers}">
+                <div class="col-2" th:each="playerCard : ${gamePlayer.getPlayer().getCards()}">
+                    <p th:text="|${playerCard.name}, ${playerCard.color}|">Nom et couleur de la carte</p>
+                </div>
+                <div th:each="gameCard : ${gameCards}" class="col-2">
+                    <p th:text="|${gameCard.name}, ${gameCard.color}|">Nom et couleur de la carte 1</p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <p th:text="|${pot} euros|">pot en euros</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <form method="post" th:action="@{/game/{path}(path=${game.getId()})}">
+                    <span th:each="gamePlayer : ${gamePlayers}">
+                        <span th:if="${gamePlayer.getPlayerDecision()==2}">
+                            <button class="btn btn-primary" type="submit" name="idGamePlayerWinner" th:value="${gamePlayer.getId()}">Vainqueur</button>
+                        </span>
+                    </span>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-3">
+        <div class="row">
+            <div class="col-12" th:each="gamePlayer : ${gamePlayers}">
+                <p th:text="${gamePlayer.getPlayer().getName()}">Nom du joueur</p>
+                <p th:text="${gamePlayer.getGain()}">Gain du joueur</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:include="fragment-script"></div>
+</body>
+</html>
