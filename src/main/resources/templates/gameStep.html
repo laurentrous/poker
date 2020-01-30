@@ -25,6 +25,11 @@
         </div>
         <div class="row">
             <div class="col-12">
+                <p th:text="|${pot} euros|">pot en euros</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
                 <p th:text="${actualPlayer.name}">Nom du joueur</p>
                 <span th:each="card : ${actualPlayer.cards}">
                     <p th:text="|${card.name}, ${card.color}|">Nom et couleur de la carte</p>
