@@ -4,14 +4,13 @@
     <title id="pageTitle">Index</title>
 </head>
 <body>
-<div class="row">
-    <div class="col-12">
-        <a th:href="@{/newGame}" class="btn btn-primary">Nouvelle partie</a>
+<div class="row row-btn-index">
+    <div class="col-3">
+        <a th:href="@{/newGame}" class="btn btn-dark btn-lg btn-block">Nouvelle partie</a>
     </div>
-</div>
-<div class="row" th:if="${firstGamePlayer != null}">
-    <div class="col-12">
-        <a th:href="@{'/game/' + ${actualGame.getId()} + '/1/' + ${firstGamePlayer.getId()}}" class="btn btn-dark">Partie en cours</a>
+    <div class="col-1"></div>
+    <div class="col-3" th:if="${firstGamePlayer != null}">
+        <a th:href="@{'/game/' + ${actualGame.getId()} + '/1/' + ${firstGamePlayer.getId()}}" class="btn btn-danger btn-lg btn-block">Partie en cours</a>
     </div>
 </div>
 <div th:include="fragment-script"></div>

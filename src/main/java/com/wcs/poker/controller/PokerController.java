@@ -262,6 +262,7 @@ public class PokerController {
         Long idGameLong = (long) idGame;
         GamePlayer winner = gamePlayerRepository.findById(idGamePlayerWinner).get();
         winner.setGain(winner.getGain() + pot);
+        pot = 0;
         Game game = gameRepository.findById(idGameLong).get();
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
         for (GamePlayer gamePlayer : gamePlayers) {

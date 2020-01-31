@@ -5,50 +5,115 @@
 </head>
 <body>
 <div class="row">
-    <div class="col-9">
+    <div class="col-10">
         <div class="row justify-content-center">
             <div th:if="${step >= 2}" class="col-2">
-                <p th:text="|${carte1.name}, ${carte1.color}|">Nom et couleur de la carte 1</p>
+                <div class="card carte">
+                    <div class="card-body">
+                        <p th:text="${carte1.name}" th:class="${carte1.color}">Nom de la carte</p>
+                        <p th:text="${carte1.color}" th:class="${carte1.color}">Couleur de la carte</p>
+                    </div>
+                </div>
             </div>
             <div th:if="${step >= 2}" class="col-2">
-                <p th:text="|${carte2.name}, ${carte2.color}|">Nom et couleur de la carte 1</p>
+                <div class="card carte">
+                    <div class="card-body">
+                        <p th:text="${carte2.name}" th:class="${carte2.color}">Nom de la carte</p>
+                        <p th:text="${carte2.color}" th:class="${carte2.color}">Couleur de la carte</p>
+                    </div>
+                </div>
             </div>
             <div th:if="${step >= 2}" class="col-2">
-                <p th:text="|${carte3.name}, ${carte3.color}|">Nom et couleur de la carte 1</p>
+                <div class="card carte">
+                    <div class="card-body">
+                        <p th:text="${carte3.name}" th:class="${carte3.color}">Nom de la carte</p>
+                        <p th:text="${carte3.color}" th:class="${carte3.color}">Couleur de la carte</p>
+                    </div>
+                </div>
             </div>
             <div th:if="${step >= 3}" class="col-2">
-                <p th:text="|${carte4.name}, ${carte4.color}|">Nom et couleur de la carte 1</p>
+                <div class="card carte">
+                    <div class="card-body">
+                        <p th:text="${carte4.name}" th:class="${carte4.color}">Nom de la carte</p>
+                        <p th:text="${carte4.color}" th:class="${carte4.color}">Couleur de la carte</p>
+                    </div>
+                </div>
             </div>
             <div th:if="${step >= 4}" class="col-2">
-                <p th:text="|${carte5.name}, ${carte5.color}|">Nom et couleur de la carte 1</p>
+                <div class="card carte">
+                    <div class="card-body">
+                        <p th:text="${carte5.name}" th:class="${carte5.color}">Nom de la carte</p>
+                        <p th:text="${carte5.color}" th:class="|${carte5.color}">Couleur de la carte</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row row-btn-gameStep">
+            <div class="col-6 pot">
+                <p th:text="|${pot} €|">pot en euros</p>
             </div>
         </div>
         <div class="row">
-            <div class="col-12">
-                <p th:text="|${pot} euros|">pot en euros</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <p th:text="${actualPlayer.name}">Nom du joueur</p>
-                <span th:each="card : ${actualPlayer.cards}">
-                    <p th:text="|${card.name}, ${card.color}|">Nom et couleur de la carte</p>
-                </span>
+            <div class="col-12" style="text-align: center">
+                <p class="game-step-player-name" th:text="|${actualPlayer.name}, que faites vous ?|">Nom du joueur</p>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#seeCard">
+                    Voir mes cartes !!!
+                </button>
                 <form method="post" th:action="@{/game/{path}(path=${game.getId()})}">
-                    <button class="btn btn-success" type="submit" name="decision" value="1">Se coucher</button>
-                    <button class="btn btn-warning" type="submit" name="decision" value="2">Suivre</button>
-                    <button class="btn btn-danger" type="submit" name="decision" value="3">Doubler la mise</button>
+                    <div class="row row-btn-gameStep">
+                        <div class="col-3">
+                            <button class="btn btn-dark btn-lg btn-block" type="submit" name="decision" value="1">Se
+                                coucher
+                            </button>
+                        </div>
+                        <div class="col-1"></div>
+                        <div class="col-3">
+                            <button class="btn btn-danger btn-lg btn-block" type="submit" name="decision" value="2">
+                                Suivre
+                            </button>
+                        </div>
+                    </div>
                     <input type="hidden" name="idPlayer" th:value="${actualPlayer.getId()}"/>
                     <input type="hidden" name="step" th:value="${step}"/>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-3">
+    <div class="col-2">
+        <h4 style="margin-top:100px;">Les joueurs</h4>
         <div class="row">
-            <div class="col-12" th:each="gamePlayer : ${gamePlayers}">
-                <p th:text="${gamePlayer.getPlayer().getName()}">Nom du joueur</p>
-                <p th:text="${gamePlayer.getGain()}">Gain du joueur</p>
+            <div class="col-12" th:each="gamePlayer : ${gamePlayers}" style="margin:10px;">
+                <p th:if="${gamePlayer.getTurn().equals('BB')}">BB</p>
+                <p th:if="${gamePlayer.getTurn().equals('SB')}">SB</p>
+                <p th:text="${gamePlayer.getPlayer().getName()}" style="font-size:20px;font-weight:bold;">Nom du joueur</p>
+                <p th:text="|${gamePlayer.getGain()} €|" style="font-size:16px;font-weight:bold;text-align:right">Gain du joueur</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="seeCard" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Voici vos cartes</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-6" th:each="card : ${actualPlayer.cards}">
+                        <div class="card carte">
+                            <div class="card-body">
+                                <p th:text="${card.name}" th:class="${card.color}">Nom de la carte</p>
+                                <p th:text="${card.color}" th:class="${card.color}">Couleur de la carte</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer cette fenêtre</button>
             </div>
         </div>
     </div>

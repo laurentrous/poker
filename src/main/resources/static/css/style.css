@@ -1,0 +1,75 @@
+body {
+    background-color: green;
+    color: white;
+}
+
+.row-btn-index {
+    margin-top: 300px;
+    display: flex;
+    justify-content: center;
+}
+
+.form-new-game {
+    background-color: whitesmoke;
+    margin-top: 50px;
+    color: black;
+}
+
+.form-new-game h2 {
+    margin: 20px 0px;
+}
+
+.row-btn-gameStep {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.game-step-player-name {
+    font-size: 30px;
+}
+
+.pot {
+    font-size: 96px;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}
+
+#seeCard {
+    color: black;
+}
+
+.carte {
+    border: grey solid 2px;
+    border-radius: 10px;
+
+}
+
+.PIQUE {
+    text-align: center;
+    font-size: 20px;
+    color: black;
+    margin: 20px
+}
+
+.TREFLE {
+    text-align: center;
+    font-size: 20px;
+    color: black;
+    margin: 20px
+}
+
+.COEUR {
+    text-align: center;
+    font-size: 20px;
+    color: red;
+    margin: 20px
+}
+
+.CARREAU {
+    text-align: center;
+    font-size: 20px;
+    color: red;
+    margin: 20px
+}
