@@ -17,4 +17,6 @@ public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
 
     GamePlayer findByPlayerIdAndGameId(long idPlayer, long idGame);
 
+    Optional<List<GamePlayer>> findAllByGameIdOrderByPlayerPosition(Long idGame);
+
 }

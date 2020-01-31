@@ -41,8 +41,8 @@ public class PokerController {
         List<Game> games = gameRepository.findTop1ByOrderByIdDesc();
         if (games.size() > 0) {
             Game actualGame = games.get(0);
-            List<GamePlayer> gamePlayers = gamePlayerRepository.findAll();
             model.addAttribute("actualGame", actualGame);
+            List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameIdOrderByPlayerPosition(actualGame.getId()).get();
             if (gamePlayers.size() > 0) {
                 GamePlayer firstGamePlayer = gamePlayers.get(0);
                 model.addAttribute("firstGamePlayer", firstGamePlayer);
@@ -51,53 +51,80 @@ public class PokerController {
         return "index";
     }
 
+
     @GetMapping("/newGame")
-    public String newGame(HttpSession sessionUser, Model model) {
+    public String newGame(Model model) {
         //TODO remettre le jeu de carte à zéro : pulled = false
         this.initialiseCardGame();
         Game game = new Game();
         model.addAttribute("game", game);
+        List<Player> players = playerRepository.findAll();
+        model.addAttribute("players", players);
         return "newGame";
-
     }
 
     @PostMapping("/newGame")
-    public String createNewGame(HttpSession sessionUser, Model model, @RequestParam int nbPlayer, @ModelAttribute Game newGame) {
+    public String createNewGame(Model model,
+                                @RequestParam int player1,
+                                @RequestParam int player2,
+                                @RequestParam int player3,
+                                @RequestParam int player4,
+                                @RequestParam int player5,
+                                @ModelAttribute Game newGame) {
         //TODO créer un nouveau jeu
         Game saveNewGame = gameRepository.save(newGame);
         pot = 0;
         //TODO instancier les joueurs
-        List<GamePlayer> gamePlayers = new ArrayList<>();
-        int j = 1;
-        for (Long i = 1L; i <= nbPlayer; i++) {
-            Optional<Player> optionalPlayer = playerRepository.findById(i);
-            if (optionalPlayer.isPresent()) {
-                Player player = optionalPlayer.get();
-                List<Card> cards = new ArrayList<>();
-                while (cards.size() < 2) {
-                    cards.add(this.pullACard());
-                }
-                player.setCards(cards);
-                GamePlayer gamePlayer = new GamePlayer();
-                gamePlayer.setGame(saveNewGame);
-                gamePlayer.setPlayer(player);
-                gamePlayer.setGain(player.getWallet());
-                gamePlayer.setPlayerPosition(j);
-                if (i == nbPlayer) {
-                    gamePlayer.setTurn("BB");
-                    gamePlayer.setGain(gamePlayer.getGain()-saveNewGame.getBigBlind());
-                    pot += saveNewGame.getBigBlind();
-                } else if (i == nbPlayer - 1) {
-                    gamePlayer.setTurn("SB");
-                    gamePlayer.setGain(gamePlayer.getGain()-saveNewGame.getSmallBlind());
-                    pot += saveNewGame.getSmallBlind();
-                } else {
-                    gamePlayer.setTurn("");
-                }
-                gamePlayerRepository.save(gamePlayer);
-                j++;
-            }
+        List<Player> players = new ArrayList<>();
+        if (player1 > 0) {
+            Long player1Long = (long) player1;
+            players.add(playerRepository.findById(player1Long).get());
         }
+        if (player2 > 0) {
+            Long player2Long = (long) player2;
+            players.add(playerRepository.findById(player2Long).get());
+        }
+        if (player3 > 0) {
+            Long player3Long = (long) player3;
+            players.add(playerRepository.findById(player3Long).get());
+        }
+        if (player4 > 0) {
+            Long player4Long = (long) player4;
+            players.add(playerRepository.findById(player4Long).get());
+        }
+        if (player5 > 0) {
+            Long player5Long = (long) player5;
+            players.add(playerRepository.findById(player5Long).get());
+        }
+
+        List<GamePlayer> gamePlayers = new ArrayList<>();
+
+        for (int i = 0; i < players.size(); i++) {
+            Player player = players.get(i);
+            List<Card> cards = new ArrayList<>();
+            while (cards.size() < 2) {
+                cards.add(this.pullACard());
+            }
+            player.setCards(cards);
+            GamePlayer gamePlayer = new GamePlayer();
+            gamePlayer.setGame(saveNewGame);
+            gamePlayer.setPlayer(player);
+            gamePlayer.setGain(player.getWallet());
+            gamePlayer.setPlayerPosition(i + 1);
+            if (i == players.size() - 1) {
+                gamePlayer.setTurn("BB");
+                gamePlayer.setGain(gamePlayer.getGain() - saveNewGame.getBigBlind());
+                pot += saveNewGame.getBigBlind();
+            } else if (i == players.size() - 2) {
+                gamePlayer.setTurn("SB");
+                gamePlayer.setGain(gamePlayer.getGain() - saveNewGame.getSmallBlind());
+                pot += saveNewGame.getSmallBlind();
+            } else {
+                gamePlayer.setTurn("");
+            }
+            gamePlayerRepository.save(gamePlayer);
+        }
+
         List<Card> gameCards = new ArrayList<>();
         while (gameCards.size() < 5) {
             gameCards.add(this.pullACard());
@@ -105,9 +132,42 @@ public class PokerController {
         saveNewGame.setCards(gameCards);
         gameRepository.save(saveNewGame);
         gamePlayers = gamePlayerRepository.findAllByGameId(saveNewGame.getId()).get();
+
         GamePlayer gamePlayerWhoPlays = gamePlayers.get(0);
         model.addAttribute("gamePlayers", gamePlayers);
         return "redirect:/game/" + saveNewGame.getId() + "/1/" + gamePlayerWhoPlays.getId();
+    }
+
+    @GetMapping("/newDistribution/{idGame}")
+    public String newDistribution(Model model,
+                                  @PathVariable("idGame") int idGame){
+
+        Long idGameLong = (long) idGame;
+        Game game = gameRepository.findById(idGameLong).get();
+        List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameIdOrderByPlayerPosition(idGameLong).get();
+        GamePlayer gamePlayerWhoPlays = new GamePlayer();
+        for (GamePlayer gamePlayer : gamePlayers) {
+            Player player = gamePlayer.getPlayer();
+            List<Card> cards = new ArrayList<>();
+            while (cards.size() < 2) {
+                cards.add(this.pullACard());
+            }
+            player.setCards(cards);
+            gamePlayerRepository.save(gamePlayer);
+            if(gamePlayer.getPlayerPosition()==1){
+                gamePlayerWhoPlays = gamePlayer;
+            }
+        }
+
+        List<Card> gameCards = new ArrayList<>();
+        while (gameCards.size() < 5) {
+            gameCards.add(this.pullACard());
+        }
+        game.setCards(gameCards);
+        gameRepository.save(game);
+
+        model.addAttribute("gamePlayers", gamePlayers);
+        return "redirect:/game/" + game.getId() + "/1/" + gamePlayerWhoPlays.getId();
     }
 
     @GetMapping("/game/{idGame}/{step}/{idGamePlayer}")
@@ -153,13 +213,12 @@ public class PokerController {
         Long idActualPlayer = (long) idPlayer;
         GamePlayer actualGamePlayer = gamePlayerRepository.findByPlayerIdAndGameId(idActualPlayer, idGameLong);
         actualGamePlayer.setPlayerDecision(decision);
-        if(decision == 2){
-            if(step==1 &&actualGamePlayer.getTurn().equals("SB")){
-                actualGamePlayer.setGain(actualGamePlayer.getGain() - (game.getBigBlind()-game.getSmallBlind()));
-                pot += game.getBigBlind()-game.getSmallBlind();
-            }
-            else if(step==1 &&actualGamePlayer.getTurn().equals("BB")){
-               pot += 0;
+        if (decision == 2) {
+            if (step == 1 && actualGamePlayer.getTurn().equals("SB")) {
+                actualGamePlayer.setGain(actualGamePlayer.getGain() - (game.getBigBlind() - game.getSmallBlind()));
+                pot += game.getBigBlind() - game.getSmallBlind();
+            } else if (step == 1 && actualGamePlayer.getTurn().equals("BB")) {
+                pot += 0;
             } else {
                 actualGamePlayer.setGain(actualGamePlayer.getGain() - game.getBigBlind());
                 pot += game.getBigBlind();
@@ -169,11 +228,11 @@ public class PokerController {
         gamePlayerRepository.save(actualGamePlayer);
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(idGameLong).get();
         int position = gamePlayers.indexOf(actualGamePlayer);
-        GamePlayer nextGamePlayer = this.whoIsPlayingThisStep(game, position);
+        GamePlayer nextGamePlayer = this.whoIsPlayingThisStep2(game, position);
         if (actualGamePlayer.getTurn().equals("BB")) {
             step++;
             nextGamePlayer = gamePlayers.get(0);
-            if(step==5){
+            if (step == 5) {
                 return "redirect:/conclusion/" + game.getId();
             }
         }
@@ -184,7 +243,7 @@ public class PokerController {
 
     @GetMapping("/conclusion/{idGame}")
     public String conclusion(Model model,
-                             @PathVariable("idGame") int idGame){
+                             @PathVariable("idGame") int idGame) {
         Long idGameLong = (long) idGame;
         Game game = gameRepository.findById(idGameLong).get();
         model.addAttribute("game", game);
@@ -199,13 +258,13 @@ public class PokerController {
     @PostMapping("/conclusion/{idGame}")
     public String conclusionSave(Model model,
                                  @PathVariable("idGame") int idGame,
-                                 @RequestParam("idGamePlayerWinner") Long idGamePlayerWinner){
+                                 @RequestParam("idGamePlayerWinner") Long idGamePlayerWinner) {
         Long idGameLong = (long) idGame;
         GamePlayer winner = gamePlayerRepository.findById(idGamePlayerWinner).get();
-        winner.setGain(winner.getGain()+pot);
+        winner.setGain(winner.getGain() + pot);
         Game game = gameRepository.findById(idGameLong).get();
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
-        for(GamePlayer gamePlayer : gamePlayers) {
+        for (GamePlayer gamePlayer : gamePlayers) {
             gamePlayer.setStep(0);
             gamePlayer.setPlayerDecision(0);
             Player player = gamePlayer.getPlayer();
@@ -218,17 +277,17 @@ public class PokerController {
             gamePlayerRepository.save(gamePlayer);
         }
         gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
-        for(GamePlayer gamePlayer : gamePlayers) {
-            if(gamePlayer.getPlayerPosition() == gamePlayers.size()){
+        for (GamePlayer gamePlayer : gamePlayers) {
+            if (gamePlayer.getPlayerPosition() == gamePlayers.size()) {
                 gamePlayer.setTurn("BB");
-            } else if (gamePlayer.getPlayerPosition() == gamePlayers.size()-1){
+            } else if (gamePlayer.getPlayerPosition() == gamePlayers.size() - 1) {
                 gamePlayer.setTurn("SB");
             } else {
                 gamePlayer.setTurn("");
             }
             gamePlayerRepository.save(gamePlayer);
         }
-        return "";
+        return "redirect:/newDistribution/" + game.getId();
     }
 
     public Card pullACard() {
@@ -274,21 +333,23 @@ public class PokerController {
         if (position == gamePlayers.size()) {
             position = 0;
         }
-        /*
-        int a = 0;
-        GamePlayer gamePlayer = gamePlayers.get(position);
-        while (a < gamePlayers.size() + 1) {
-            if (gamePlayer.getPlayerDecision() > 1) {
-                return gamePlayer;
-            }
-            position++;
+        return gamePlayers.get(position);
+    }
+
+    public GamePlayer whoIsPlayingThisStep2(Game game, int actualPosition) {
+        List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
+        int position = actualPosition + 1;
+        while(position != actualPosition) {
             if (position == gamePlayers.size()) {
                 position = 0;
             }
-            gamePlayer = gamePlayers.get(position);
-            a++;
+            GamePlayer nextGamePlayer = gamePlayers.get(position);
+            if (nextGamePlayer.getPlayerDecision() != 1) {
+                return gamePlayers.get(position);
+            } else {
+                position++;
+            }
         }
-        */
         return gamePlayers.get(position);
     }
 
