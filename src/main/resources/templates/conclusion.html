@@ -21,41 +21,42 @@
                 <p th:text="|${pot} €|">pot en euros</p>
             </div>
         </div>
-        <div th:each="gamePlayer : ${gamePlayers}" class="row">
-            <div class="col-12">
+        <divclass="row">
+            <div class="col-4" th:each="gamePlayer : ${gamePlayers}" >
                 <h3 th:text="${gamePlayer.getPlayer().getName()}">Nom du joueur</h3>
-                    <span th:if="${gamePlayer.getPlayerDecision()==2}">
+                <span th:if="${gamePlayer.getPlayerDecision()==2}">
                         <div th:each="playerCard : ${gamePlayer.getPlayer().getCards()}">
                             <div class="card carte">
                                 <div class="card-body">
                                     <p th:text="${playerCard.name}" th:class="${playerCard.color}">Nom de la carte</p>
-                                    <p th:text="${playerCard.color}" th:class="${playerCard.color}">Couleur de la carte</p>
+                                    <p th:text="${playerCard.color}"
+                                       th:class="${playerCard.color}">Couleur de la carte</p>
                                 </div>
                             </div>
                         </div>
                         <div>
                             <form method="post" th:action="@{/conclusion/{path}(path=${game.getId()})}">
                                 <button class="btn btn-primary" type="submit" name="idGamePlayerWinner"
-                                            th:value="${gamePlayer.getId()}">Vainqueur</button>
+                                        th:value="${gamePlayer.getId()}">Vainqueur</button>
                             </form>
                         </div>
                     </span>
             </div>
         </div>
-    </div>
-</div>
-<div class="col-2">
-    <h4 style="margin-top:100px;">Les joueurs</h4>
-    <div class="row">
-        <div class="col-12" th:each="gamePlayer : ${gamePlayers}" style="margin:10px;">
-            <p th:if="${gamePlayer.getTurn().equals('BB')}">BB</p>
-            <p th:if="${gamePlayer.getTurn().equals('SB')}">SB</p>
-            <p th:text="${gamePlayer.getPlayer().getName()}" style="font-size:20px;font-weight:bold;">Nom du joueur</p>
-            <p th:text="|${gamePlayer.getGain()} €|" style="font-size:16px;font-weight:bold;text-align:right">Gain du
-                joueur</p>
+        <div class="col-2">
+            <h4 style="margin-top:100px;">Les joueurs</h4>
+            <div class="row">
+                <div class="col-12" th:each="gamePlayer : ${gamePlayers}" style="margin:10px;">
+                    <p th:if="${gamePlayer.getTurn().equals('BB')}">BB</p>
+                    <p th:if="${gamePlayer.getTurn().equals('SB')}">SB</p>
+                    <p th:text="${gamePlayer.getPlayer().getName()}" style="font-size:20px;font-weight:bold;">Nom du
+                        joueur</p>
+                    <p th:text="|${gamePlayer.getGain()} €|" style="font-size:16px;font-weight:bold;text-align:right">
+                        Gain du
+                        joueur</p>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-<div th:include="fragment-script"></div>
+        <div th:include="fragment-script"></div>
 </body>
 </html>

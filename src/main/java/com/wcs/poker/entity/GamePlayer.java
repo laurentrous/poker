@@ -19,8 +19,9 @@ public class GamePlayer {
 
     private int gain;
     private String turn;
-    private int playerDecision;
     private int step;
+    private int playerDecision;
+    private int cardsValue;
     private int playerPosition;
 
     public GamePlayer() {
@@ -80,6 +81,14 @@ public class GamePlayer {
 
     public void setStep(int step) {
         this.step = step;
+    }
+
+    public int getCardsValue() {
+        return cardsValue;
+    }
+
+    public void setCardsValue(int cardsValue) {
+        this.cardsValue = cardsValue;
     }
 
     public int getPlayerPosition() {

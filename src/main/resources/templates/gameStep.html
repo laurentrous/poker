@@ -55,22 +55,40 @@
         </div>
         <div class="row">
             <div class="col-12" style="text-align: center">
-                <p class="game-step-player-name" th:text="|${actualPlayer.name}, que faites vous ?|">Nom du joueur</p>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#seeCard">
-                    Voir mes cartes !!!
-                </button>
+                <span th:if="${!actualPlayer.isIa()}">
+                    <p class="game-step-player-name" th:text="|${actualPlayer.name}, que faites vous ?|">Nom du joueur</p>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#seeCard">
+                        Voir mes cartes !!!
+                    </button>
+                </span>
                 <form method="post" th:action="@{/game/{path}(path=${game.getId()})}">
-                    <div class="row row-btn-gameStep">
-                        <div class="col-3">
-                            <button class="btn btn-dark btn-lg btn-block" type="submit" name="decision" value="1">Se
-                                coucher
-                            </button>
+                    <div th:if="${actualPlayer.isIa()}">
+                        <div class="row row-btn-gameStep">
+                            <div class="col-5" th:if="${iaDecision==1}">
+                                <p class="game-step-player-name" th:text="|${actualPlayer.getName()} a décidé de se coucher|">se coucher</p>
+                                <button class="btn btn-dark btn-lg btn-block" type="submit" name="decision" value="1">OK
+                                </button>
+                            </div>
+                            <div class="col-5" th:if="${iaDecision==2}">
+                                <p class="game-step-player-name" th:text="|${actualPlayer.getName()} a décidé de suivre|">suivre</p>
+                                <button class="btn btn-dark btn-lg btn-block" type="submit" name="decision" value="2">OK
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-1"></div>
-                        <div class="col-3">
-                            <button class="btn btn-danger btn-lg btn-block" type="submit" name="decision" value="2">
-                                Suivre
-                            </button>
+                    </div>
+                    <div th:if="${!actualPlayer.isIa()}">
+                        <div class="row row-btn-gameStep">
+                            <div class="col-3">
+                                <button class="btn btn-dark btn-lg btn-block" type="submit" name="decision" value="1">Se
+                                    coucher
+                                </button>
+                            </div>
+                            <div class="col-1"></div>
+                            <div class="col-3">
+                                <button class="btn btn-danger btn-lg btn-block" type="submit" name="decision" value="2">
+                                    Suivre
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" name="idPlayer" th:value="${actualPlayer.getId()}"/>

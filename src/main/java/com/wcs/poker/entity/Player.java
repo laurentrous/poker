@@ -12,7 +12,7 @@ public class Player {
     private Long id;
 
     private String name;
-    private String agressiveness;
+    private int agressiveness;
     private String email;
     private String password;
     private boolean ia;
@@ -47,11 +47,11 @@ public class Player {
         this.name = name;
     }
 
-    public String getAgressiveness() {
+    public int getAgressiveness() {
         return agressiveness;
     }
 
-    public void setAgressiveness(String agressiveness) {
+    public void setAgressiveness(int agressiveness) {
         this.agressiveness = agressiveness;
     }
 

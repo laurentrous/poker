@@ -13,7 +13,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +41,9 @@ public class PokerController {
         if (games.size() > 0) {
             Game actualGame = games.get(0);
             model.addAttribute("actualGame", actualGame);
-            List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameIdOrderByPlayerPosition(actualGame.getId()).get();
-            if (gamePlayers.size() > 0) {
+            Optional<List<GamePlayer>> optionalGamePlayers = gamePlayerRepository.findAllByGameIdOrderByPlayerPosition(actualGame.getId());
+            if (optionalGamePlayers.isPresent()) {
+                List<GamePlayer> gamePlayers = optionalGamePlayers.get();
                 GamePlayer firstGamePlayer = gamePlayers.get(0);
                 model.addAttribute("firstGamePlayer", firstGamePlayer);
             }
@@ -97,16 +97,12 @@ public class PokerController {
             players.add(playerRepository.findById(player5Long).get());
         }
 
-        List<GamePlayer> gamePlayers = new ArrayList<>();
-
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
-            List<Card> cards = new ArrayList<>();
-            while (cards.size() < 2) {
-                cards.add(this.pullACard());
-            }
+            List<Card> cards = this.cardDistribution(2);
             player.setCards(cards);
             GamePlayer gamePlayer = new GamePlayer();
+            gamePlayer.setCardsValue(this.cardsValue(cards));
             gamePlayer.setGame(saveNewGame);
             gamePlayer.setPlayer(player);
             gamePlayer.setGain(player.getWallet());
@@ -125,13 +121,10 @@ public class PokerController {
             gamePlayerRepository.save(gamePlayer);
         }
 
-        List<Card> gameCards = new ArrayList<>();
-        while (gameCards.size() < 5) {
-            gameCards.add(this.pullACard());
-        }
+        List<Card> gameCards = this.cardDistribution(5);
         saveNewGame.setCards(gameCards);
         gameRepository.save(saveNewGame);
-        gamePlayers = gamePlayerRepository.findAllByGameId(saveNewGame.getId()).get();
+        List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(saveNewGame.getId()).get();
 
         GamePlayer gamePlayerWhoPlays = gamePlayers.get(0);
         model.addAttribute("gamePlayers", gamePlayers);
@@ -140,7 +133,7 @@ public class PokerController {
 
     @GetMapping("/newDistribution/{idGame}")
     public String newDistribution(Model model,
-                                  @PathVariable("idGame") int idGame){
+                                  @PathVariable("idGame") int idGame) {
 
         Long idGameLong = (long) idGame;
         Game game = gameRepository.findById(idGameLong).get();
@@ -148,21 +141,15 @@ public class PokerController {
         GamePlayer gamePlayerWhoPlays = new GamePlayer();
         for (GamePlayer gamePlayer : gamePlayers) {
             Player player = gamePlayer.getPlayer();
-            List<Card> cards = new ArrayList<>();
-            while (cards.size() < 2) {
-                cards.add(this.pullACard());
-            }
+            List<Card> cards = this.cardDistribution(2);
             player.setCards(cards);
             gamePlayerRepository.save(gamePlayer);
-            if(gamePlayer.getPlayerPosition()==1){
+            if (gamePlayer.getPlayerPosition() == 1) {
                 gamePlayerWhoPlays = gamePlayer;
             }
         }
 
-        List<Card> gameCards = new ArrayList<>();
-        while (gameCards.size() < 5) {
-            gameCards.add(this.pullACard());
-        }
+        List<Card> gameCards = this.cardDistribution(5);
         game.setCards(gameCards);
         gameRepository.save(game);
 
@@ -184,7 +171,11 @@ public class PokerController {
         GamePlayer actualGamePlayer = gamePlayerRepository.findById(idGamePlayerLong).get();
         List<Card> gameCards = game.getCards();
         Player actualPlayer = actualGamePlayer.getPlayer();
+        actualGamePlayer.setCardsValue(this.cardsValueWithGameCards(step, actualGamePlayer.getPlayer().getCards(), gameCards));
         model.addAttribute("actualPlayer", actualPlayer);
+        if (actualPlayer.isIa()) {
+            model.addAttribute("iaDecision", this.iaDecision(actualGamePlayer, step));
+        }
         model.addAttribute("step", step);
         if (step >= 2) {
             model.addAttribute("carte1", gameCards.get(0));
@@ -262,7 +253,6 @@ public class PokerController {
         Long idGameLong = (long) idGame;
         GamePlayer winner = gamePlayerRepository.findById(idGamePlayerWinner).get();
         winner.setGain(winner.getGain() + pot);
-        pot = 0;
         Game game = gameRepository.findById(idGameLong).get();
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
         for (GamePlayer gamePlayer : gamePlayers) {
@@ -281,13 +271,16 @@ public class PokerController {
         for (GamePlayer gamePlayer : gamePlayers) {
             if (gamePlayer.getPlayerPosition() == gamePlayers.size()) {
                 gamePlayer.setTurn("BB");
+                gamePlayer.setGain(gamePlayer.getGain() - 20);
             } else if (gamePlayer.getPlayerPosition() == gamePlayers.size() - 1) {
                 gamePlayer.setTurn("SB");
+                gamePlayer.setGain(gamePlayer.getGain() - 10);
             } else {
                 gamePlayer.setTurn("");
             }
             gamePlayerRepository.save(gamePlayer);
         }
+        pot = 30;
         return "redirect:/newDistribution/" + game.getId();
     }
 
@@ -340,7 +333,7 @@ public class PokerController {
     public GamePlayer whoIsPlayingThisStep2(Game game, int actualPosition) {
         List<GamePlayer> gamePlayers = gamePlayerRepository.findAllByGameId(game.getId()).get();
         int position = actualPosition + 1;
-        while(position != actualPosition) {
+        while (position != actualPosition) {
             if (position == gamePlayers.size()) {
                 position = 0;
             }
@@ -367,4 +360,168 @@ public class PokerController {
         return true;
     }
 
+    public List<Card> cardDistribution(int nbCard) {
+        List<Card> gameCards = new ArrayList<>();
+        while (gameCards.size() < nbCard) {
+            Card card = this.pullACard();
+            if (card != null) {
+                gameCards.add(this.pullACard());
+            }
+        }
+        return gameCards;
+    }
+
+    public int cardsValue(List<Card> cards) {
+        if (this.checkPairs(cards)) {
+            return 200;
+        }
+        if (this.checkColors(cards)) {
+            return 100;
+        }
+        return cards.get(0).getValue() + cards.get(1).getValue();
+    }
+
+    public int cardsValueWithGameCards(int step, List<Card> playerCards, List<Card> gameCards) {
+        Card card1 = playerCards.get(0);
+        Card card2 = playerCards.get(1);
+        Card card3 = gameCards.get(0);
+        Card card4 = gameCards.get(1);
+        Card card5 = gameCards.get(2);
+        Card card6 = gameCards.get(3);
+        Card card7 = gameCards.get(4);
+        int sameCard1 = 0;
+        int sameCard2 = 0;
+        int sameCard3 = 0;
+        int sameCard4 = 0;
+        int sameCard5 = 0;
+        int sameCard6 = 0;
+        int[] tab = {card1.getValue(), card2.getValue(), card3.getValue(), card4.getValue(), card5.getValue(), card6.getValue(), card7.getValue()};
+
+        //verifier les combinaisons de cartes
+        if (card1.getValue() == card2.getValue()) {
+            sameCard1++;
+        }
+        if (card1.getValue() == card3.getValue()) {
+            sameCard1++;
+        }
+        if (card1.getValue() == card4.getValue()) {
+            sameCard1++;
+        }
+        if (card1.getValue() == card5.getValue()) {
+            sameCard1++;
+        }
+        if (card1.getValue() == card6.getValue() && step > 1) {
+            sameCard1++;
+        }
+        if (card1.getValue() == card7.getValue() && step > 2) {
+            sameCard1++;
+        }
+        if (card2.getValue() == card3.getValue()) {
+            sameCard2++;
+        }
+        if (card2.getValue() == card4.getValue()) {
+            sameCard2++;
+        }
+        if (card2.getValue() == card5.getValue()) {
+            sameCard2++;
+        }
+        if (card2.getValue() == card6.getValue() && step > 1) {
+            sameCard2++;
+        }
+        if (card2.getValue() == card7.getValue() && step > 2) {
+            sameCard2++;
+        }
+        if (card3.getValue() == card4.getValue()) {
+            sameCard3++;
+        }
+        if (card3.getValue() == card5.getValue()) {
+            sameCard3++;
+        }
+        if (card3.getValue() == card6.getValue() && step > 1) {
+            sameCard3++;
+        }
+        if (card3.getValue() == card7.getValue() && step > 2) {
+            sameCard3++;
+        }
+        if (card4.getValue() == card5.getValue()) {
+            sameCard4++;
+        }
+        if (card4.getValue() == card6.getValue() && step > 1) {
+            sameCard4++;
+        }
+        if (card4.getValue() == card7.getValue() && step > 2) {
+            sameCard4++;
+        }
+        if (card5.getValue() == card6.getValue() && step > 1) {
+            sameCard5++;
+        }
+        if (card5.getValue() == card7.getValue() && step > 2) {
+            sameCard5++;
+        }
+        if (card6.getValue() == card7.getValue() && step > 2) {
+            sameCard6++;
+        }
+
+        if (sameCard1 == 3 || sameCard2 == 3 || sameCard3 == 3 || sameCard4 == 3) {
+            //carré
+        } else if (sameCard1 == 2 || sameCard2 == 2 || sameCard3 == 2 || sameCard4 == 2 || sameCard5 == 2) {
+            if (sameCard1 == 1 || sameCard2 == 1 || sameCard3 == 1 || sameCard4 == 1 || sameCard5 == 1 || sameCard6 == 1){
+                //foul
+            }
+            //brelan
+        } else if (sameCard1 == 1 || sameCard2 == 1 || sameCard3 == 1 || sameCard4 == 1 || sameCard5 == 1 || sameCard6 == 1){
+            if (sameCard1 + sameCard2 + sameCard3 + sameCard4 + sameCard5 + sameCard6 > 1){
+                //double paire
+            }
+            //paire seule
+        }
+
+        //vérifier les couleurs
+
+        //verifier les suites
+
+
+
+
+    }
+
+    public boolean checkPairs(List<Card> cards) {
+        if (cards.get(0).getValue() == cards.get(1).getValue()) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean checkColors(List<Card> cards) {
+        if (cards.get(0).getColor().equals(cards.get(1).getColor())) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public int iaDecision(GamePlayer gamePlayer, int step) {
+        Player player = playerRepository.findById(gamePlayer.getPlayer().getId()).get();
+        if (step == 1) {
+            if (gamePlayer.getTurn().equals("BB")) {
+                return 2;
+            }
+            if (player.getAgressiveness() == 1) {
+                if (gamePlayer.getCardsValue() >= 200) {
+                    return 2;
+                }
+            }
+            if (player.getAgressiveness() == 2) {
+                if (gamePlayer.getCardsValue() >= 100) {
+                    return 2;
+                }
+            }
+            if (player.getAgressiveness() == 3) {
+                if (gamePlayer.getCardsValue() >= 40) {
+                    return 2;
+                }
+            }
+        }
+        return 1;
+    }
 }
